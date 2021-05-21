@@ -29,8 +29,8 @@ def tensor_map(fn):
     """
 
     def _map(out, out_shape, out_strides, in_storage, in_shape, in_strides):
-        # TODO: Implement for Task 2.2.
-        raise NotImplementedError('Need to implement for Task 2.2')
+        for i in range(len(out)):
+            out[i] = fn(in_storage[i])
 
     return _map
 
@@ -99,8 +99,9 @@ def tensor_zip(fn):
         b_shape,
         b_strides,
     ):
-        # TODO: Implement for Task 2.2.
-        raise NotImplementedError('Need to implement for Task 2.2')
+        assert len(a_storage) == len(b_storage), "Input tensors must have same size"
+        for i in range(len(a_storage)):
+            out[i] = fn(a_storage[i], b_storage[i])
 
     return _zip
 
@@ -167,8 +168,19 @@ def tensor_reduce(fn):
         reduce_shape,
         reduce_size,
     ):
-        # TODO: Implement for Task 2.2.
-        raise NotImplementedError('Need to implement for Task 2.2')
+
+        out_index = np.zeros(len(out_shape), np.int32)
+        a_index = np.zeros(len(a_shape), np.int32)
+        for i in range(len(out)):
+            count(i, out_shape, out_index)
+
+            for s in range(reduce_size):
+                count(s, reduce_shape, a_index)
+                for k in range(len(reduce_shape)):
+                    if reduce_shape[k] != 1:
+                        out_index[k] = a_index[k]
+                j = index_to_position(out_index, a_strides)
+                out[i] = fn(out[i], a_storage[j])
 
     return _reduce
 

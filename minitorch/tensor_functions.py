@@ -95,6 +95,7 @@ def make_tensor_backend(tensor_ops, is_cuda=False):
         class Mul(Function):
             @staticmethod
             def forward(ctx, a, b):
+                ctx.save_for_backward(a, b)
                 return mul_zip(a, b)
 
             @staticmethod
@@ -105,6 +106,7 @@ def make_tensor_backend(tensor_ops, is_cuda=False):
         class Sigmoid(Function):
             @staticmethod
             def forward(ctx, a):
+                ctx.save_for_backward(a)
                 return sigmoid_map(a)
 
             @staticmethod
@@ -125,6 +127,7 @@ def make_tensor_backend(tensor_ops, is_cuda=False):
         class Log(Function):
             @staticmethod
             def forward(ctx, a):
+                ctx.save_for_backward(a)
                 return log_map(a)
 
             @staticmethod
@@ -135,6 +138,7 @@ def make_tensor_backend(tensor_ops, is_cuda=False):
         class Exp(Function):
             @staticmethod
             def forward(ctx, a):
+                ctx.save_for_backward(a)
                 return exp_map(a)
 
             @staticmethod
@@ -166,10 +170,11 @@ def make_tensor_backend(tensor_ops, is_cuda=False):
         class Mean(Function):
             @staticmethod
             def forward(ctx, a, dim):
+                ctx.save_for_backward(a.shape, dim)
                 if dim is not None:
                     return add_reduce(a, [dim]) / a.shape[dim]
                 else:
-                    return add_reduce(a, list(range(a.dims))).view(1) / np.prod(a.shape)
+                    return add_reduce(a, list(range(a.dims))).view(1) / a.size
 
             @staticmethod
             def backward(ctx, grad_output):
@@ -179,6 +184,7 @@ def make_tensor_backend(tensor_ops, is_cuda=False):
         class LT(Function):
             @staticmethod
             def forward(ctx, a, b):
+                ctx.save_for_backward(a, b)
                 return lt_zip(a, b)
 
             @staticmethod
@@ -199,13 +205,8 @@ def make_tensor_backend(tensor_ops, is_cuda=False):
         class Permute(Function):
             @staticmethod
             def forward(ctx, a, order):
-                new_tensor_data = a._tensor.permute(*order)
-                return Tensor.make(
-                    new_tensor_data._storage,
-                    new_tensor_data.shape,
-                    strides=new_tensor_data.strides,
-                    backend=a.backend,
-                )
+                ctx.save_for_backward(order)
+                return a._new(a._tensor.permute(*order))
 
             @staticmethod
             def backward(ctx, grad_output):

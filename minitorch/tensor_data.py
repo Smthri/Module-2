@@ -1,6 +1,7 @@
 import random
 from .operators import prod
 from numpy import array, float64, ndarray
+import numpy as np
 import numba
 
 MAX_DIMS = 32
@@ -23,9 +24,7 @@ def index_to_position(index, strides):
     Returns:
         int : position in storage
     """
-
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError('Need to implement for Task 2.1')
+    return sum(index * strides)
 
 
 def count(position, shape, out_index):
@@ -44,8 +43,9 @@ def count(position, shape, out_index):
       None : Fills in `out_index`.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError('Need to implement for Task 2.1')
+    for i in range(len(shape) - 1, -1, -1):
+        out_index[i] = position % shape[i]
+        position //= shape[i]
 
 
 def broadcast_index(big_index, big_shape, shape, out_index):
@@ -66,7 +66,7 @@ def broadcast_index(big_index, big_shape, shape, out_index):
         None : Fills in `out_index`.
     """
     # TODO: Implement for Task 2.4.
-    raise NotImplementedError('Need to implement for Task 2.4')
+    raise NotImplementedError("Need to implement for Task 2.4")
 
 
 def shape_broadcast(shape1, shape2):
@@ -84,7 +84,7 @@ def shape_broadcast(shape1, shape2):
         IndexingError : if cannot broadcast
     """
     # TODO: Implement for Task 2.4.
-    raise NotImplementedError('Need to implement for Task 2.4')
+    raise NotImplementedError("Need to implement for Task 2.4")
 
 
 def strides_from_shape(shape):
@@ -191,8 +191,14 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
-        # TODO: Implement for Task 2.1.
-        raise NotImplementedError('Need to implement for Task 2.1')
+        new_shape = np.array(self.shape)
+        new_strides = np.array(self.strides)
+
+        for i in range(len(new_shape)):
+            new_shape[i] = self.shape[order[i]]
+            new_strides[i] = self.strides[order[i]]
+
+        return TensorData(self._storage, tuple(new_shape), tuple(new_strides))
 
     def to_string(self):
         s = ""
